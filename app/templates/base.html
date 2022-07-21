@@ -2,16 +2,7 @@
 
 <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
 
-<nav class="navbar navbar-default" role="navigation">
-  <div class="container-fluid">
-    <div class="col-md-6 col-md-offset-3">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="/">Все посты</a>
-      </div>
-    </div>
-  </div>
-</nav>
-
+<!--
 <form action="" method=post enctype=multipart/form-data>
   <p><input type=file name=file>
   <input type=submit value=Upload>
@@ -25,13 +16,33 @@
 </div>
 </div>
 
+<div class="mb-3">
+  <label for="formFile" class="form-label">Select file</label>
+  <input class="form-control" type="file" id="formFile">
+  <input type=submit value=Upload>
+</div>
+
+-->
+
 <div class="px-4 pt-5 my-5 text-center border-bottom">
   <h1 class="display-4 fw-bold">Face Detection</h1>
   <div class="col-lg-6 mx-auto">
     <p class="lead mb-4">You can upload picture to detect all the faces on it.</p>
     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
-      <button type="button" class="btn btn-primary btn-lg px-4 me-sm-3">Upload</button>
-      
+      <!-- <button type="button" class="btn btn-primary btn-lg px-4 me-sm-3">Upload</button> -->
+
+
+      <form action="" method=post enctype=multipart/form-data>
+        <fieldset>
+          <div class="form-group">
+           <!-- <label for="formFile" class="form-label mt-4">Default file input example</label> -->
+            <input class="form-control mb-4" type="file" id="formFile">
+          </div>
+          <input type="submit" class="btn btn-primary"></input>
+        </fieldset>
+      </form>
+
+
     </div>
   </div>
   <div class="overflow-hidden" style="">
