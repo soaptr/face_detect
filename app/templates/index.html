@@ -1,4 +1,4 @@
 {% extends "base.html" %}
 {% block content %}
-    <h2>Hello, World</h2>
+    <img src="{{ url_for('static', filename=image) }}" class="img-fluid border rounded-3 shadow-lg mb-4" alt="Example image" width="700" height="500" loading="lazy">
 {% endblock %}
