@@ -1,1 +1,1 @@
-web: flask translate compile; gunicorn face_detect:app
+web: gunicorn face_detect:app
