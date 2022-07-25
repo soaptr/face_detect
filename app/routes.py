@@ -119,8 +119,6 @@ checkpoint_path = 'app/NNs/checkpoint_yolov5_last.pth'
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5m', pretrained=True, classes=1, autoshape=False)
 model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-#model = checkpoint['model']
-#torch.save(model, 'app/NNs/checkpoint_yolov5_last.pth')
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
