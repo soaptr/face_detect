@@ -1,1 +1,1 @@
-web: gunicorn face_detect:app
+web: gunicorn detect:app
