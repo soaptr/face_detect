@@ -1,11 +1,13 @@
 from app import app
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
 import torch
 import torchvision
+import torchvision.transforms.functional as F
 import cv2
 import numpy as np
-import albumentations as albu
+from PIL import Image
+#import albumentations as albu
 
 def xywh2xyxy(x):
     # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
@@ -83,9 +85,12 @@ def find_faces(model, img, img_path, image_size=640, conf_thresh=0.5, transforms
     height, width = img.shape[:2]
     ratio = max(height, width) / image_size
     image = np.copy(img)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = Image.fromarray(image)
     if transforms is not None:
-        sample = transforms(image=image)
-        image = sample['image']
+        #sample = transforms(image=image)
+        #image = sample['image']
+        image = transforms(image)
     pred = model(image[None,:])
     pred = non_max_suppression(pred[0])
     pred = pred[0]
@@ -103,17 +108,32 @@ def find_faces(model, img, img_path, image_size=640, conf_thresh=0.5, transforms
     del pred, image, img_with_boxes
 
 IMAGE_SIZE = 640
-class ToTensorNormalTest(object):
-    def __call__(self, image, force_apply=None):
-        image = image.transpose((2, 0, 1))
-        return {'image': torch.tensor(image, dtype=torch.float32)/255.}
 
-test_transform = albu.Compose([
-    albu.LongestMaxSize(max_size=IMAGE_SIZE),
-    albu.PadIfNeeded(min_height=IMAGE_SIZE, min_width=IMAGE_SIZE, border_mode=cv2.BORDER_CONSTANT),
-    ToTensorNormalTest()
-    ]
-)
+#class ToTensorNormalTest(object):
+#    def __call__(self, image, force_apply=None):
+#        image = image.transpose((2, 0, 1))
+#        return {'image': torch.tensor(image, dtype=torch.float32)/255.}
+
+#test_transform = albu.Compose([
+#    albu.LongestMaxSize(max_size=IMAGE_SIZE),
+#    albu.PadIfNeeded(min_height=IMAGE_SIZE, min_width=IMAGE_SIZE, border_mode=cv2.BORDER_CONSTANT),
+#    ToTensorNormalTest()
+#    ]
+#)
+
+class SquarePad:
+    def __call__(self, image):
+        w, h = image.size
+        max_wh = np.max([w, h])
+        hp = int((max_wh - w) / 2)
+        vp = int((max_wh - h) / 2)
+        padding = (hp, vp, hp, vp)
+        return F.pad(image, padding, 0, 'constant')
+
+test_transform = torchvision.transforms.Compose([
+        SquarePad(),
+        torchvision.transforms.Resize(IMAGE_SIZE),
+        torchvision.transforms.ToTensor()])
 
 checkpoint_path = 'app/NNs/checkpoint_yolov5_last.pth'
 
@@ -123,7 +143,7 @@ model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 app.config['UPLOAD_FOLDER'] = 'app/static/images/'
-app.config['SECRET_KEY'] = 'secret_key'
+#app.config['SECRET_KEY'] = 'secret_key'
 
 def allowed_file(filename):
     return '.' in filename and \
