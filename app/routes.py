@@ -135,10 +135,13 @@ test_transform = torchvision.transforms.Compose([
         torchvision.transforms.Resize(IMAGE_SIZE),
         torchvision.transforms.ToTensor()])
 
-checkpoint_path = 'app/NNs/checkpoint_yolov5_last.pth'
+checkpoint_path = 'app/checkpoint_yolov5_last.pt'
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5m', pretrained=True, classes=1, autoshape=False)
 model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+#model = torch.hub.load('ultralytics/yolov5', 'custom', path=checkpoint_path, force_reload=True)
+#model.load_state_dict(torch.load(checkpoint_path))
+#torch.save(model, 'app/NNs/checkpoint_yolov5_last.pt')
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
@@ -166,6 +169,6 @@ def upload():
         img_path = app.config['UPLOAD_FOLDER'] + filename
         file.save(img_path)
         img = cv2.imread(img_path)
-        img = find_faces(model, img, img_path, conf_thresh=0.5, transforms=test_transform);
+        find_faces(model, img, img_path, conf_thresh=0.5, transforms=test_transform)
         return redirect(url_for('index', image='images/'+filename))
     return redirect(url_for('index'))
