@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from PIL import Image
 import gc
+import os
 #import albumentations as albu
 
 def xywh2xyxy(x):
@@ -106,7 +107,7 @@ def find_faces(model, img, img_path, image_size=640, conf_thresh=0.5, transforms
         boxes[:,2] = boxes[:,2] - (height-width)/2
     img_with_boxes = plot_preds(img, boxes)
     cv2.imwrite(img_path, img_with_boxes)
-    del pred, image, img_with_boxes
+    del pred, image, img_with_boxes, boxes
     gc.collect()
 
 IMAGE_SIZE = 640
@@ -156,12 +157,17 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 example_image = 'images/example.bmp'
+downloaded_imgs = []
 
 @app.route('/')
 def index():
     image = request.args.get('image')
     if not image:
         image = example_image
+    for f in downloaded_imgs:
+        if ('images/'+f) != image:
+            os.remove(app.config['UPLOAD_FOLDER']+f)
+            downloaded_imgs.remove(f)
     return render_template('index.html', image=image)
 
 @app.route('/upload', methods=['POST'])
@@ -173,7 +179,8 @@ def upload():
         file.save(img_path)
         img = cv2.imread(img_path)
         find_faces(model, img, img_path, conf_thresh=0.5, transforms=test_transform)
-        del img
+        downloaded_imgs.append(filename)
+        del img, file
         gc.collect()
         return redirect(url_for('index', image='images/'+filename))
     return redirect(url_for('index'))
