@@ -71,7 +71,7 @@ def non_max_suppression(prediction,
 
     return output
 
-def plot_preds(numpy_img, preds, border=2):
+def plot_preds(numpy_img, preds, border=3):
     img = numpy_img.copy()
     height, width = img.shape[:2]
     for bbox in preds:
