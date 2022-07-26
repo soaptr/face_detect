@@ -7,6 +7,7 @@ import torchvision.transforms.functional as F
 import cv2
 import numpy as np
 from PIL import Image
+import gc
 #import albumentations as albu
 
 def xywh2xyxy(x):
@@ -71,11 +72,11 @@ def non_max_suppression(prediction,
 
     return output
 
-def plot_preds(numpy_img, preds, border=3):
-    img = numpy_img.copy()
+def plot_preds(img, preds, border=3):
+    #img = numpy_img.copy()
     height, width = img.shape[:2]
-    for bbox in preds:
-        box = np.copy(bbox)
+    for box in preds:
+        #box = np.copy(bbox)
         box = box.astype(int)
         img = cv2.rectangle(img,(box[0],box[1]),(box[2],box[3]),(0,0,255),border)
     return img
@@ -106,6 +107,7 @@ def find_faces(model, img, img_path, image_size=640, conf_thresh=0.5, transforms
     img_with_boxes = plot_preds(img, boxes)
     cv2.imwrite(img_path, img_with_boxes)
     del pred, image, img_with_boxes
+    gc.collect()
 
 IMAGE_SIZE = 640
 
@@ -171,5 +173,7 @@ def upload():
         file.save(img_path)
         img = cv2.imread(img_path)
         find_faces(model, img, img_path, conf_thresh=0.5, transforms=test_transform)
+        del img
+        gc.collect()
         return redirect(url_for('index', image='images/'+filename))
     return redirect(url_for('index'))
