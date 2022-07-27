@@ -1,1 +1,1 @@
-web: gunicorn detect:app
+web: gunicorn detect:app --max-requests 1
