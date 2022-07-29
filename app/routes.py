@@ -159,7 +159,7 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-example_image = 'example.bmp'
+example_image = 'example.jpg'
 downloaded_imgs = []
 
 @app.route('/')
@@ -169,7 +169,7 @@ def index():
     if not image:
         image = example_image
     if not boxes:
-        boxes = 0
+        boxes = 10
     boxes = int(boxes)
     for (f, n) in downloaded_imgs:
         if (f) != image:
