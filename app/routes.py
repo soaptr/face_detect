@@ -160,7 +160,6 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 example_image = 'example.jpg'
-downloaded_imgs = []
 
 @app.route('/')
 def index():
@@ -171,12 +170,9 @@ def index():
     if not boxes:
         boxes = 10
     boxes = int(boxes)
-    for (f, n) in downloaded_imgs:
-        if (f) != image:
+    for f in os.listdir(app.config['UPLOAD_FOLDER']):
+        if (not (image in f)) and (not (example_image in f)):
             os.remove(app.config['UPLOAD_FOLDER']+f)
-            for i in range(n):
-                os.remove(app.config['UPLOAD_FOLDER']+str(i)+'-'+f)
-            downloaded_imgs.remove((f,n))
     return render_template('index.html', image=image, boxes=boxes)
 
 @app.route('/upload', methods=['POST'])
@@ -188,7 +184,6 @@ def upload():
         file.save(img_path)
         img = cv2.imread(img_path)
         n_boxes = find_faces(model, img, filename, conf_thresh=0.5, transforms=test_transform)
-        downloaded_imgs.append((filename, n_boxes))
         del img, file
         gc.collect()
         return redirect(url_for('index', image=filename, boxes=n_boxes))
