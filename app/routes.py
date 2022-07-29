@@ -73,16 +73,19 @@ def non_max_suppression(prediction,
 
     return output
 
-def plot_preds(img, preds, border=3):
+def plot_preds(img, filename, preds, border=3):
     #img = numpy_img.copy()
     height, width = img.shape[:2]
+    for i, box in enumerate(preds):
+        box = box.astype(int)
+        face = img[box[1]:box[3], box[0]:box[2]]
+        cv2.imwrite(app.config['UPLOAD_FOLDER']+str(i)+'-'+filename, face)
     for box in preds:
-        #box = np.copy(bbox)
         box = box.astype(int)
         img = cv2.rectangle(img,(box[0],box[1]),(box[2],box[3]),(0,0,255),border)
     return img
 
-def find_faces(model, img, img_path, image_size=640, conf_thresh=0.5, transforms=None):
+def find_faces(model, img, filename, image_size=640, conf_thresh=0.5, transforms=None):
     model.eval()
     height, width = img.shape[:2]
     ratio = max(height, width) / image_size
@@ -90,8 +93,6 @@ def find_faces(model, img, img_path, image_size=640, conf_thresh=0.5, transforms
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = Image.fromarray(image)
     if transforms is not None:
-        #sample = transforms(image=image)
-        #image = sample['image']
         image = transforms(image)
     pred = model(image[None,:])
     pred = non_max_suppression(pred[0])
@@ -105,10 +106,12 @@ def find_faces(model, img, img_path, image_size=640, conf_thresh=0.5, transforms
     else:
         boxes[:,0] = boxes[:,0] - (height-width)/2
         boxes[:,2] = boxes[:,2] - (height-width)/2
-    img_with_boxes = plot_preds(img, boxes)
+    img_with_boxes = plot_preds(img, filename, boxes)
+    img_path = app.config['UPLOAD_FOLDER'] + filename
     cv2.imwrite(img_path, img_with_boxes)
-    del pred, image, img_with_boxes, boxes
+    del pred, image, img_with_boxes
     gc.collect()
+    return boxes.shape[0]
 
 IMAGE_SIZE = 640
 
@@ -156,19 +159,25 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-example_image = 'images/example.bmp'
+example_image = 'example.bmp'
 downloaded_imgs = []
 
 @app.route('/')
 def index():
     image = request.args.get('image')
+    boxes = request.args.get('boxes')
     if not image:
         image = example_image
-    for f in downloaded_imgs:
-        if ('images/'+f) != image:
+    if not boxes:
+        boxes = 0
+    boxes = int(boxes)
+    for (f, n) in downloaded_imgs:
+        if (f) != image:
             os.remove(app.config['UPLOAD_FOLDER']+f)
-            downloaded_imgs.remove(f)
-    return render_template('index.html', image=image)
+            for i in range(n):
+                os.remove(app.config['UPLOAD_FOLDER']+str(i)+'-'+f)
+            downloaded_imgs.remove((f,n))
+    return render_template('index.html', image=image, boxes=boxes)
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -178,9 +187,9 @@ def upload():
         img_path = app.config['UPLOAD_FOLDER'] + filename
         file.save(img_path)
         img = cv2.imread(img_path)
-        find_faces(model, img, img_path, conf_thresh=0.5, transforms=test_transform)
-        downloaded_imgs.append(filename)
+        n_boxes = find_faces(model, img, filename, conf_thresh=0.5, transforms=test_transform)
+        downloaded_imgs.append((filename, n_boxes))
         del img, file
         gc.collect()
-        return redirect(url_for('index', image='images/'+filename))
+        return redirect(url_for('index', image=filename, boxes=n_boxes))
     return redirect(url_for('index'))

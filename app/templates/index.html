@@ -1,4 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
-    <img src="{{ url_for('static', filename=image) }}" class="img-fluid border rounded-3 shadow-lg mb-4" alt="Example image" width="700" height="500" loading="lazy">
+    <img src="{{ url_for('static', filename='images/'+image) }}" class="img-fluid border rounded-3 shadow-lg mb-4" width="700" height="500" loading="lazy">
+
+    <div class="container px-5">
+      {% for i in range(boxes//6+1) %}
+          <div class="row">
+            {% if boxes-i*6 < 6 %}
+                {% set c = boxes-i*6 %}
+            {% else %}
+                {% set c = 6 %}
+            {% endif %}
+            {% for j in range(c) %}
+                <div class="col-2">
+                  <img 
+                    src="{{ url_for('static', filename='images/'+(i*6+j)|string+'-'+image) }}"
+                    class="w-100 shadow-1-strong rounded mb-4"
+                  />
+                </div>
+            {% endfor %}
+          </div>
+      {% endfor %}
+    </div>
 {% endblock %}
